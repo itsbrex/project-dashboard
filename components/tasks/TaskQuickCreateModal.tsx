@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { motion } from 'motion/react'
 import { format } from 'date-fns'
 import { CalendarBlank, ChartBar, Paperclip, Tag as TagIcon, Microphone, UserCircle, X, Folder, Rows } from '@phosphor-icons/react/dist/ssr'
 
@@ -13,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { GenericPicker, DatePicker } from '@/components/project-wizard/steps/StepQuickCreate'
 import { ProjectDescriptionEditor } from '@/components/project-wizard/ProjectDescriptionEditor'
+import { QuickCreateModalLayout } from '@/components/QuickCreateModalLayout'
 import { toast } from 'sonner'
 
 export type CreateTaskContext = {
@@ -203,8 +203,6 @@ export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated, ed
     }
   }, [projectId, workstreamOptions, workstreamId, workstreamName])
 
-  if (!open) return null
-
   const handleSubmit = () => {
     if (editingTask) {
       const effectiveProjectId = projectId ?? editingTask.projectId
@@ -274,32 +272,47 @@ export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated, ed
   const projectLabel = projectOptions.find((p) => p.id === projectId)?.label
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{
-          opacity: 1,
-          scale: 1,
-          height: isDescriptionExpanded ? '85vh' : 'auto',
-        }}
-        transition={{ duration: 0.25, ease: 'easeInOut' }}
-        className="flex w-full max-w-[720px] rounded-3xl bg-background shadow-2xl border border-border"
-        onKeyDown={(e) => {
-          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-            e.preventDefault()
-            handleSubmit()
-          }
-        }}
-      >
-        <div className="flex flex-1 flex-col p-4 gap-3.5">
-          {/* Context row */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 flex-wrap">
+    <QuickCreateModalLayout
+      open={open}
+      onClose={onClose}
+      isDescriptionExpanded={isDescriptionExpanded}
+      onSubmitShortcut={handleSubmit}
+    >
+      {/* Context row */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <GenericPicker
+            items={projectOptions}
+            selectedId={projectId}
+            onSelect={(item) => setProjectId(item.id)}
+            placeholder="Choose project..."
+            renderItem={(item) => (
+              <div className="flex items-center justify-between w-full gap-2">
+                <span>{item.label}</span>
+              </div>
+            )}
+            trigger={
+              <button
+                className="bg-background flex gap-2 h-7 items-center px-2 py-1 rounded-lg border border-background hover:border-primary/50 transition-colors text-xs disabled:opacity-60"
+              >
+                <Folder className="size-4 text-muted-foreground" />
+                <span className="truncate max-w-[160px] font-medium text-foreground">
+                  {projectLabel ?? 'Choose project'}
+                </span>
+              </button>
+            }
+          />
+          {workstreamOptions.length > 0 && (
+            <>
+              <div className="w-2 h-2 bg-muted-foreground/15 rounded-full" />
               <GenericPicker
-                items={projectOptions}
-                selectedId={projectId}
-                onSelect={(item) => setProjectId(item.id)}
-                placeholder="Choose project..."
+                items={workstreamOptions}
+                selectedId={workstreamId}
+                onSelect={(item) => {
+                  setWorkstreamId(item.id)
+                  setWorkstreamName(item.label)
+                }}
+                placeholder="Choose workstream..."
                 renderItem={(item) => (
                   <div className="flex items-center justify-between w-full gap-2">
                     <span>{item.label}</span>
@@ -309,229 +322,199 @@ export function TaskQuickCreateModal({ open, onClose, context, onTaskCreated, ed
                   <button
                     className="bg-background flex gap-2 h-7 items-center px-2 py-1 rounded-lg border border-background hover:border-primary/50 transition-colors text-xs disabled:opacity-60"
                   >
-                    <Folder className="size-4 text-muted-foreground" />
+                    <Rows className="size-4 text-muted-foreground" />
                     <span className="truncate max-w-[160px] font-medium text-foreground">
-                      {projectLabel ?? 'Choose project'}
+                      {workstreamName ?? 'Choose workstream'}
                     </span>
                   </button>
                 }
               />
-
-              {workstreamOptions.length > 0 && (
-                <>
-                  <div className="w-2 h-2 bg-muted-foreground/15 rounded-full" />
-                  <GenericPicker
-                    items={workstreamOptions}
-                    selectedId={workstreamId}
-                    onSelect={(item) => {
-                      setWorkstreamId(item.id)
-                      setWorkstreamName(item.label)
-                    }}
-                    placeholder="Choose workstream..."
-                    renderItem={(item) => (
-                      <div className="flex items-center justify-between w-full gap-2">
-                        <span>{item.label}</span>
-                      </div>
-                    )}
-                    trigger={
-                      <button
-                        className="bg-background flex gap-2 h-7 items-center px-2 py-1 rounded-lg border border-background hover:border-primary/50 transition-colors text-xs disabled:opacity-60"
-                      >
-                        <Rows className="size-4 text-muted-foreground" />
-                        <span className="truncate max-w-[160px] font-medium text-foreground">
-                          {workstreamName ?? 'Choose workstream'}
-                        </span>
-                      </button>
-                    }
-                  />
-                </>
-              )}
-            </div>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="h-8 w-8 rounded-full opacity-70 hover:opacity-100"
-            >
-              <X className="h-4 w-4 text-muted-foreground" />
-            </Button>
-          </div>
-
-          {/* Title */}
-          <div className="flex flex-col gap-2 w-full shrink-0 mt-1">
-            <div className="flex gap-1 h-10 items-center w-full">
-              <input
-                id="task-create-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Task title"
-                className="w-full font-normal leading-7 text-foreground placeholder:text-muted-foreground text-xl outline-none bg-transparent border-none p-0"
-                autoComplete="off"
-              />
-            </div>
-          </div>
-
-          {/* Description */}
-          <ProjectDescriptionEditor
-            value={description}
-            onChange={setDescription}
-            onExpandChange={setIsDescriptionExpanded}
-            placeholder="Briefly describe the goal or details of this task..."
-            showTemplates={false}
-          />
-
-          {/* Properties */}
-          <div className="flex flex-wrap gap-2.5 items-start w-full shrink-0">
-            {/* Assignee */}
-            <GenericPicker
-              items={ASSIGNEE_OPTIONS}
-              onSelect={setAssignee}
-              selectedId={assignee?.id}
-              placeholder="Assign owner..."
-              renderItem={(item) => (
-                <div className="flex items-center gap-2 w-full">
-                  <div className="size-5 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
-                    {item.name.charAt(0)}
-                  </div>
-                  <span className="flex-1">{item.name}</span>
-                </div>
-              )}
-              trigger={
-                <button className="bg-muted flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:border-primary/50 transition-colors">
-                  <div className="size-4 rounded-full bg-background flex items-center justify-center text-[10px] font-medium">
-                    {assignee?.name.charAt(0) ?? '?'}
-                  </div>
-                  <span className="font-medium text-foreground text-sm leading-5">
-                    {assignee?.name ?? 'Assignee'}
-                  </span>
-                </button>
-              }
-            />
-
-            {/* Start date */}
-            <DatePicker
-              date={startDate}
-              onSelect={setStartDate}
-              trigger={
-                <button className="bg-muted flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:border-primary/50 transition-colors">
-                  <CalendarBlank className="size-4 text-muted-foreground" />
-                  <span className="font-medium text-foreground text-sm leading-5">
-                    {startDate ? `Start: ${format(startDate, 'dd/MM/yyyy')}` : 'Start date'}
-                  </span>
-                </button>
-              }
-            />
-
-            {/* Status */}
-            <GenericPicker
-              items={STATUS_OPTIONS}
-              onSelect={setStatus}
-              selectedId={status.id}
-              placeholder="Change status..."
-              renderItem={(item) => (
-                <div className="flex items-center gap-2 w-full">
-                  <span className="flex-1">{item.label}</span>
-                </div>
-              )}
-              trigger={
-                <button className="bg-background flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:bg-black/5 transition-colors">
-                  <UserCircle className="size-4 text-muted-foreground" />
-                  <span className="font-medium text-foreground text-sm leading-5">
-                    {status.label}
-                  </span>
-                </button>
-              }
-            />
-
-            {/* Target date */}
-            <DatePicker
-              date={targetDate}
-              onSelect={setTargetDate}
-              trigger={
-                <button className="bg-background flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:bg-black/5 transition-colors">
-                  <CalendarBlank className="size-4 text-muted-foreground" />
-                  <span className="font-medium text-foreground text-sm leading-5">
-                    {targetDate ? format(targetDate, 'dd/MM/yyyy') : 'Target'}
-                  </span>
-                </button>
-              }
-            />
-
-            {/* Priority */}
-            <GenericPicker
-              items={PRIORITY_OPTIONS}
-              onSelect={setPriority}
-              selectedId={priority?.id}
-              placeholder="Set priority..."
-              renderItem={(item) => (
-                <div className="flex items-center gap-2 w-full">
-                  <span className="flex-1">{item.label}</span>
-                </div>
-              )}
-              trigger={
-                <button className="bg-background flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:bg-black/5 transition-colors">
-                  <ChartBar className="size-4 text-muted-foreground" />
-                  <span className="font-medium text-foreground text-sm leading-5">
-                    {priority?.label ?? 'Priority'}
-                  </span>
-                </button>
-              }
-            />
-
-            {/* Tag */}
-            <GenericPicker
-              items={TAG_OPTIONS}
-              onSelect={setSelectedTag}
-              selectedId={selectedTag?.id}
-              placeholder="Add tag..."
-              renderItem={(item) => (
-                <div className="flex items-center gap-2 w-full">
-                  <span className="flex-1">{item.label}</span>
-                </div>
-              )}
-              trigger={
-                <button className="bg-background flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:bg-black/5 transition-colors">
-                  <TagIcon className="size-4 text-muted-foreground" />
-                  <span className="font-medium text-foreground text-sm leading-5">
-                    {selectedTag?.label ?? 'Tag'}
-                  </span>
-                </button>
-              }
-            />
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between mt-auto w-full pt-4 shrink-0">
-            <div className="flex items-center gap-1">
-              <button className="flex items-center justify-center size-10 rounded-lg hover:bg-muted transition-colors">
-                <Paperclip className="size-4 text-muted-foreground" />
-              </button>
-              <button className="flex items-center justify-center size-10 rounded-lg hover:bg-muted transition-colors">
-                <Microphone className="size-4 text-muted-foreground" />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-4">
-              {!editingTask && (
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={createMore}
-                    onCheckedChange={(value) => setCreateMore(Boolean(value))}
-                  />
-                  <span className="text-sm font-medium text-foreground">Create more</span>
-                </div>
-              )}
-
-              <Button type="button" onClick={handleSubmit} className="h-10 px-4 rounded-xl">
-                {editingTask ? 'Save changes' : 'Create Task'}
-              </Button>
-            </div>
-          </div>
+            </>
+          )}
         </div>
-      </motion.div>
-    </div>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="h-8 w-8 rounded-full opacity-70 hover:opacity-100"
+        >
+          <X className="h-4 w-4 text-muted-foreground" />
+        </Button>
+      </div>
+
+      {/* Title */}
+      <div className="flex flex-col gap-2 w-full shrink-0 mt-1">
+        <div className="flex gap-1 h-10 items-center w-full">
+          <input
+            id="task-create-title"
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Task title"
+            className="w-full font-normal leading-7 text-foreground placeholder:text-muted-foreground text-xl outline-none bg-transparent border-none p-0"
+            autoComplete="off"
+          />
+        </div>
+      </div>
+
+      {/* Description */}
+      <ProjectDescriptionEditor
+        value={description}
+        onChange={setDescription}
+        onExpandChange={setIsDescriptionExpanded}
+        placeholder="Briefly describe the goal or details of this task..."
+        showTemplates={false}
+      />
+
+      {/* Properties */}
+      <div className="flex flex-wrap gap-2.5 items-start w-full shrink-0">
+        {/* Assignee */}
+        <GenericPicker
+          items={ASSIGNEE_OPTIONS}
+          onSelect={setAssignee}
+          selectedId={assignee?.id}
+          placeholder="Assign owner..."
+          renderItem={(item) => (
+            <div className="flex items-center gap-2 w-full">
+              <div className="size-5 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
+                {item.name.charAt(0)}
+              </div>
+              <span className="flex-1">{item.name}</span>
+            </div>
+          )}
+          trigger={
+            <button className="bg-muted flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:border-primary/50 transition-colors">
+              <div className="size-4 rounded-full bg-background flex items-center justify-center text-[10px] font-medium">
+                {assignee?.name.charAt(0) ?? '?'}
+              </div>
+              <span className="font-medium text-foreground text-sm leading-5">
+                {assignee?.name ?? 'Assignee'}
+              </span>
+            </button>
+          }
+        />
+
+        {/* Start date */}
+        <DatePicker
+          date={startDate}
+          onSelect={setStartDate}
+          trigger={
+            <button className="bg-muted flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:border-primary/50 transition-colors">
+              <CalendarBlank className="size-4 text-muted-foreground" />
+              <span className="font-medium text-foreground text-sm leading-5">
+                {startDate ? `Start: ${format(startDate, 'dd/MM/yyyy')}` : 'Start date'}
+              </span>
+            </button>
+          }
+        />
+
+        {/* Status */}
+        <GenericPicker
+          items={STATUS_OPTIONS}
+          onSelect={setStatus}
+          selectedId={status.id}
+          placeholder="Change status..."
+          renderItem={(item) => (
+            <div className="flex items-center gap-2 w-full">
+              <span className="flex-1">{item.label}</span>
+            </div>
+          )}
+          trigger={
+            <button className="bg-background flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:bg-black/5 transition-colors">
+              <UserCircle className="size-4 text-muted-foreground" />
+              <span className="font-medium text-foreground text-sm leading-5">
+                {status.label}
+              </span>
+            </button>
+          }
+        />
+
+        {/* Target date */}
+        <DatePicker
+          date={targetDate}
+          onSelect={setTargetDate}
+          trigger={
+            <button className="bg-background flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:bg-black/5 transition-colors">
+              <CalendarBlank className="size-4 text-muted-foreground" />
+              <span className="font-medium text-foreground text-sm leading-5">
+                {targetDate ? format(targetDate, 'dd/MM/yyyy') : 'Target'}
+              </span>
+            </button>
+          }
+        />
+
+        {/* Priority */}
+        <GenericPicker
+          items={PRIORITY_OPTIONS}
+          onSelect={setPriority}
+          selectedId={priority?.id}
+          placeholder="Set priority..."
+          renderItem={(item) => (
+            <div className="flex items-center gap-2 w-full">
+              <span className="flex-1">{item.label}</span>
+            </div>
+          )}
+          trigger={
+            <button className="bg-background flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:bg-black/5 transition-colors">
+              <ChartBar className="size-4 text-muted-foreground" />
+              <span className="font-medium text-foreground text-sm leading-5">
+                {priority?.label ?? 'Priority'}
+              </span>
+            </button>
+          }
+        />
+
+        {/* Tag */}
+        <GenericPicker
+          items={TAG_OPTIONS}
+          onSelect={setSelectedTag}
+          selectedId={selectedTag?.id}
+          placeholder="Add tag..."
+          renderItem={(item) => (
+            <div className="flex items-center gap-2 w-full">
+              <span className="flex-1">{item.label}</span>
+            </div>
+          )}
+          trigger={
+            <button className="bg-background flex gap-2 h-9 items-center px-3 py-2 rounded-lg border border-border hover:bg-black/5 transition-colors">
+              <TagIcon className="size-4 text-muted-foreground" />
+              <span className="font-medium text-foreground text-sm leading-5">
+                {selectedTag?.label ?? 'Tag'}
+              </span>
+            </button>
+          }
+        />
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between mt-auto w-full pt-4 shrink-0">
+        <div className="flex items-center gap-1">
+          <button className="flex items-center justify-center size-10 rounded-lg hover:bg-muted transition-colors">
+            <Paperclip className="size-4 text-muted-foreground" />
+          </button>
+          <button className="flex items-center justify-center size-10 rounded-lg hover:bg-muted transition-colors">
+            <Microphone className="size-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {!editingTask && (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={createMore}
+                onCheckedChange={(value) => setCreateMore(Boolean(value))}
+              />
+              <span className="text-sm font-medium text-foreground">Create more</span>
+            </div>
+          )}
+
+          <Button type="button" onClick={handleSubmit} className="h-10 px-4 rounded-xl">
+            {editingTask ? 'Save changes' : 'Create Task'}
+          </Button>
+        </div>
+      </div>
+    </QuickCreateModalLayout>
   )
 }

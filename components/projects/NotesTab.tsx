@@ -46,7 +46,17 @@ export function NotesTab({ notes, currentUser = defaultUser }: NotesTabProps) {
 
     const handleFileSelect = (fileName: string) => {
         console.log("File selected:", fileName)
+
+        // Close both modals
         setIsUploadModalOpen(false)
+        setIsCreateModalOpen(false)
+
+        // Simulate processing the uploaded file into a note
+        toast(`Processing "${fileName}" into a note...`)
+
+        setTimeout(() => {
+            toast.success(`Note created from "${fileName}"`)
+        }, 5000)
     }
 
     const handleNoteClick = (note: ProjectNote) => {

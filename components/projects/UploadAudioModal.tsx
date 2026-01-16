@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef } from "react"
 import { UploadSimple } from "@phosphor-icons/react/dist/ssr"
 
 import {
@@ -21,20 +22,32 @@ export function UploadAudioModal({
     onOpenChange,
     onFileSelect,
 }: UploadAudioModalProps) {
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault()
-        onFileSelect("uploaded-audio.mp3")
-        onOpenChange(false)
+        const files = e.dataTransfer.files
+        if (files.length > 0) {
+            onFileSelect(files[0].name)
+            onOpenChange(false)
+        }
     }
 
     const handleClick = () => {
-        onFileSelect("uploaded-audio.mp3")
-        onOpenChange(false)
+        fileInputRef.current?.click()
+    }
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files
+        if (files && files.length > 0) {
+            onFileSelect(files[0].name)
+            onOpenChange(false)
+        }
     }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px] z-[60] p-0 gap-0 rounded-3xl border border-border shadow-2xl">
+            <DialogContent className="sm:max-w-[600px] z-[60] p-6 gap-0 rounded-3xl border border-border shadow-2xl">
                 <DialogHeader>
                     <VisuallyHidden>
                         <DialogTitle>Upload Audio File</DialogTitle>
@@ -46,7 +59,7 @@ export function UploadAudioModal({
                 </DialogHeader>
 
                 <div
-                    className="mt-4 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-12 cursor-pointer hover:border-muted-foreground/50 transition-colors"
+                    className="mt-4 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-12 cursor-pointer hover:border-primary/50 transition-colors"
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={handleDrop}
                     onClick={handleClick}
@@ -59,6 +72,13 @@ export function UploadAudioModal({
                         Supports MP3, WAV, M4A, FLAC, AAC, MP4, MOV, AVI, MKV and more
                     </p>
                 </div>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="audio/*,video/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                />
             </DialogContent>
         </Dialog>
     )
