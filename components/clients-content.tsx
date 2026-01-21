@@ -274,8 +274,12 @@ export function ClientsContent() {
                         )}
                       </button>
                     </TableHead>
-                    <TableHead className="w-[14%] text-xs font-medium text-muted-foreground">Last activity</TableHead>
-                    <TableHead className="w-[18%] text-xs font-medium text-muted-foreground">Owner</TableHead>
+                    <TableHead className="min-w-[112px] text-xs font-medium text-muted-foreground whitespace-nowrap">
+                      Last activity
+                    </TableHead>
+                    <TableHead className="min-w-[128px] text-xs font-medium text-muted-foreground whitespace-nowrap">
+                      Owner
+                    </TableHead>
                     <TableHead className="w-[40px]" />
                   </TableRow>
                 </TableHeader>
@@ -334,10 +338,10 @@ export function ClientsContent() {
                         <TableCell className="align-middle text-right text-sm text-muted-foreground">
                           {projectCount}
                         </TableCell>
-                        <TableCell className="align-middle text-sm text-muted-foreground">
+                        <TableCell className="align-middle text-sm text-muted-foreground whitespace-nowrap">
                           {client.lastActivityLabel ?? "—"}
                         </TableCell>
-                        <TableCell className="align-middle text-sm text-muted-foreground">
+                        <TableCell className="align-middle text-sm text-muted-foreground whitespace-nowrap">
                           {client.owner ?? "—"}
                         </TableCell>
                         <TableCell className="align-middle text-right">
