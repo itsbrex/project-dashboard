@@ -152,8 +152,8 @@ function StatusBadge({ status }: { status: NoteStatus }) {
             className={cn(
                 "text-xs font-normal capitalize",
                 status === "completed"
-                    ? "border-green-200 bg-green-50 text-green-700"
-                    : "border-yellow-200 bg-yellow-50 text-yellow-700"
+                    ? "border-green-200 bg-green-50 text-green-700 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-100"
+                    : "border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-50"
             )}
         >
             {status}

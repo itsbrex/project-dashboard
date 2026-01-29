@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -32,6 +33,7 @@ import {
   CaretUpDown,
 } from "@phosphor-icons/react/dist/ssr"
 import { activeProjects, footerItems, navItems, type NavItemId, type SidebarFooterItemId } from "@/lib/data/sidebar"
+import { SettingsDialog } from "@/components/settings/SettingsDialog"
 
 const navItemIcons: Record<NavItemId, React.ComponentType<{ className?: string }>> = {
   inbox: Tray,
@@ -49,6 +51,7 @@ const footerItemIcons: Record<SidebarFooterItemId, React.ComponentType<{ classNa
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const getHrefForNavItem = (id: NavItemId): string => {
     if (id === "my-tasks") return "/tasks"
@@ -167,7 +170,14 @@ export function AppSidebar() {
         <SidebarMenu>
           {footerItems.map((item) => (
             <SidebarMenuItem key={item.label}>
-              <SidebarMenuButton className="h-9 rounded-lg px-3 text-muted-foreground">
+              <SidebarMenuButton
+                className="h-9 rounded-lg px-3 text-muted-foreground"
+                onClick={() => {
+                  if (item.id === "settings") {
+                    setIsSettingsOpen(true)
+                  }
+                }}
+              >
                 {(() => {
                   const Icon = footerItemIcons[item.id]
                   return Icon ? <Icon className="h-[18px] w-[18px]" /> : null
@@ -190,6 +200,8 @@ export function AppSidebar() {
           <CaretRight className="h-4 w-4 text-muted-foreground" />
         </div>
       </SidebarFooter>
+
+      <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </Sidebar>
   )
 }
