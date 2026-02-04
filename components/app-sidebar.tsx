@@ -18,6 +18,12 @@ import {
 } from "@/components/ui/sidebar"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ProgressCircle } from "@/components/progress-circle"
 import {
   MagnifyingGlass,
@@ -29,11 +35,13 @@ import {
   Gear,
   Layout,
   Question,
+  SignOut,
   CaretRight,
   CaretUpDown,
 } from "@phosphor-icons/react/dist/ssr"
 import { activeProjects, footerItems, navItems, type NavItemId, type SidebarFooterItemId } from "@/lib/data/sidebar"
 import { SettingsDialog } from "@/components/settings/SettingsDialog"
+import { AuthDialog, type AuthMode } from "@/components/auth/AuthDialog"
 
 const navItemIcons: Record<NavItemId, React.ComponentType<{ className?: string }>> = {
   inbox: Tray,
@@ -52,6 +60,13 @@ const footerItemIcons: Record<SidebarFooterItemId, React.ComponentType<{ classNa
 export function AppSidebar() {
   const pathname = usePathname()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isAuthOpen, setIsAuthOpen] = useState(false)
+  const [authMode, setAuthMode] = useState<AuthMode>("sign-in")
+
+  const openAuth = (mode: AuthMode) => {
+    setAuthMode(mode)
+    setIsAuthOpen(true)
+  }
 
   const getHrefForNavItem = (id: NavItemId): string => {
     if (id === "my-tasks") return "/tasks"
@@ -188,20 +203,42 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
 
-        <div className="mt-2 flex items-center gap-3 rounded-lg p-2 hover:bg-accent cursor-pointer">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="/avatar-profile.jpg" />
-            <AvatarFallback>JD</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-1 flex-col">
-            <span className="text-sm font-medium">Jason D</span>
-            <span className="text-xs text-muted-foreground">jason.duong@mail.com</span>
-          </div>
-          <CaretRight className="h-4 w-4 text-muted-foreground" />
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="mt-2 flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-accent cursor-pointer"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="/avatar-profile.jpg" />
+                <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-1 flex-col">
+                <span className="text-sm font-medium">Jason D</span>
+                <span className="text-xs text-muted-foreground">jason.duong@mail.com</span>
+              </div>
+              <CaretRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="end" className="w-40">
+            <DropdownMenuItem
+              className="cursor-pointer text-destructive focus:text-destructive"
+              onSelect={() => openAuth("sign-in")}
+            >
+              <SignOut className="h-4 w-4" />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
 
       <SettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+      <AuthDialog
+        open={isAuthOpen}
+        onOpenChange={setIsAuthOpen}
+        mode={authMode}
+        onModeChange={setAuthMode}
+      />
     </Sidebar>
   )
 }
