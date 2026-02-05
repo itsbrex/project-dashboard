@@ -73,6 +73,7 @@ export function AppSidebar() {
     if (id === "projects") return "/"
     if (id === "inbox") return "/inbox"
     if (id === "clients") return "/clients"
+    if (id === "performance") return "/performance"
     return "#"
   }
 
@@ -88,6 +89,9 @@ export function AppSidebar() {
     }
     if (id === "clients") {
       return pathname.startsWith("/clients")
+    }
+    if (id === "performance") {
+      return pathname.startsWith("/performance")
     }
     return false
   }
